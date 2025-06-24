@@ -1,0 +1,43 @@
+# Gluten-Free Bread Plugin Configuration
+# Adjust consumption thresholds and effects here
+
+consumption:
+  threshold: 5 # Minimum hunger level to apply effects
+
+recipe:
+  enabled: true # Enable or disable the custom recipes
+
+logging:
+  debug: false # Enable debug logging for development
+
+# Configuration for different bread types
+breads:
+  plain:
+    effects:
+      regeneration:
+        duration: 10 # Duration in seconds
+        amplifier: 0 # Effect level (0 = level 1, 1 = level 2, etc.)
+  sweet:
+    effects:
+      regeneration:
+        duration: 10
+        amplifier: 1
+      speed:
+        duration: 15
+        amplifier: 0
+  spicy:
+    effects:
+      fire_resistance:
+        duration: 20
+        amplifier: 0
+      strength:
+        duration: 10
+        amplifier: 0
+  savory:
+    effects:
+      absorption:
+        duration: 15
+        amplifier: 0
+      regeneration:
+        duration: 10
+        amplifier: 0

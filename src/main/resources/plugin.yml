@@ -1,0 +1,27 @@
+name: GlutenFreeBread
+version: '${project.version}'
+main: com.carmelosantana.glutenfreebread.GlutenFreeBreadPlugin
+description: A Minecraft plugin that adds gluten-free bread variants with unique health benefits
+authors: [Carmelo Santana]
+website: https://hv2.world
+api-version: '1.21'
+depend: []
+softdepend: []
+
+permissions:
+  glutenfreebread.craft:
+    description: Allows crafting gluten-free bread
+    default: true
+  glutenfreebread.consume:
+    description: Allows consuming gluten-free bread
+    default: true
+  glutenfreebread.admin:
+    description: Allows admin commands for gluten-free bread
+    default: op
+
+commands:
+  gfbread:
+    description: Gluten-Free Bread plugin commands
+    usage: /gfbread <help|give|reload|version|clear|list> [args...]
+    permission: glutenfreebread.admin
+    permission-message: You don't have permission to use this command!
