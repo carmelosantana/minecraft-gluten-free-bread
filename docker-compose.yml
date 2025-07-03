@@ -19,7 +19,7 @@ services:
       BedrockPort: "19132"
       TZ: "America/New_York"
       MaxMemory: 4096
-      Version: "1.21.5" # Force latest Paper version
+      Version: "1.21.6" # Force latest Paper version
       NoBackup: "plugins" # Skip plugins during backups
       NoPermCheck: "Y" # Skip permissions check
       NoViaVersion: "Y" # Enable ViaVersion for compatibility
