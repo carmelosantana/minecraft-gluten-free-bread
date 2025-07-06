@@ -2,6 +2,7 @@
 
 A robust Minecraft plugin that introduces **Gluten Free Bread** variants, providing players with healthy alternatives to traditional wheat-based bread. Each variant offers unique crafting recipes and *enchanting* effects when consumed.
 
+- [Features](#features)
 - [Bread Variants](#bread-variants)
 - [Installation](#installation)
   - [Requirements](#requirements)
@@ -16,11 +17,8 @@ A robust Minecraft plugin that introduces **Gluten Free Bread** variants, provid
   - [Commands](#commands)
   - [Examples](#examples)
 - [Configuration](#configuration)
-- [Development](#development)
-  - [Development Setup](#development-setup)
-  - [Testing](#testing)
-  - [Server Management](#server-management)
-- [Docker Support](#docker-support)
+- [Contributing](#contributing)
+  - [Developer Quick Start](#developer-quick-start)
 - [Permissions](#permissions)
 - [Overconsumption Protection](#overconsumption-protection)
 - [Resource Pack Support](#resource-pack-support)
@@ -42,7 +40,7 @@ A robust Minecraft plugin that introduces **Gluten Free Bread** variants, provid
 - [License](#license)
 
 
-##025-07-05 21:23:30 Features
+## Features
 
 - **Four Bread Variants**: Plain, Sweet, Spicy, and Savory gluten-free bread
 - **Custom Recipes**: Each variant requires unique ingredients
@@ -194,66 +192,31 @@ breads:
   # ... (other bread types)
 ```
 
-## Development
+## Contributing
 
-### Development Setup
+Please review [Contributing Guidelines](./CONTRIBUTING.md) for developer documentation. Including;
+
+- Development environment setup
+- Code standards and testing procedures
+- Pull request process
+- Server management and Docker support
+- Troubleshooting
+
+### Developer Quick Start
 
 ```bash
-# Check dependencies
-make check-deps
-
 # Set up development environment
 make setup
 
 # Quick development cycle
-make dev    # build + install + restart
-```
+make dev
 
-### Testing
-
-```bash
-# Run unit tests
+# Run tests
 make test
 
 # Test in Docker
 make docker-test
-
-# Validate code
-make validate
 ```
-
-### Server Management
-
-```bash
-# Start test server
-make start
-
-# View server logs
-make logs
-
-# Show server status
-make status
-
-# Reset for testing
-make reset
-```
-
-## Docker Support
-
-Test the plugin easily with Docker:
-
-```bash
-# Build and test in container
-make docker-test
-
-# Or manually
-docker-compose up -d
-```
-
-Server will be available at:
-
-- **Java Edition**: `localhost:25565`
-- **Bedrock Edition**: `localhost:19132`
 
 ## Permissions
 
