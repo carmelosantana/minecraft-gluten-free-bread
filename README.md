@@ -1,8 +1,48 @@
-# Gluten-Free Bread Plugin
+# Gluten Free Bread Plugin
 
-A comprehensive Minecraft plugin that introduces **Gluten-Free Bread** variants, providing players with healthy alternatives to traditional wheat-based bread. Each variant offers unique crafting recipes and beneficial effects when consumed.
+A robust Minecraft plugin that introduces **Gluten Free Bread** variants, providing players with healthy alternatives to traditional wheat-based bread. Each variant offers unique crafting recipes and *enchanting* effects when consumed.
 
-## 🍞 Features
+- [Bread Variants](#bread-variants)
+- [Installation](#installation)
+  - [Requirements](#requirements)
+  - [Quick Install](#quick-install)
+  - [Build from Source](#build-from-source)
+- [Usage](#usage)
+  - [Crafting Recipes](#crafting-recipes)
+    - [Plain Gluten Free Bread](#plain-gluten-free-bread)
+    - [Sweet Gluten Free Bread](#sweet-gluten-free-bread)
+    - [Spicy Gluten Free Bread](#spicy-gluten-free-bread)
+    - [Savory Gluten Free Bread](#savory-gluten-free-bread)
+  - [Commands](#commands)
+  - [Examples](#examples)
+- [Configuration](#configuration)
+- [Development](#development)
+  - [Development Setup](#development-setup)
+  - [Testing](#testing)
+  - [Server Management](#server-management)
+- [Docker Support](#docker-support)
+- [Permissions](#permissions)
+- [Overconsumption Protection](#overconsumption-protection)
+- [Resource Pack Support](#resource-pack-support)
+- [Technical Details](#technical-details)
+  - [Architecture](#architecture)
+  - [Compatibility](#compatibility)
+  - [Performance](#performance)
+- [API Usage](#api-usage)
+- [Troubleshooting](#troubleshooting)
+  - [Possible Issues](#possible-issues)
+  - [Debug Mode](#debug-mode)
+- [🎓 Learn AI Powered Plugin Development](#-learn-ai-powered-plugin-development)
+  - [What You'll Learn](#what-youll-learn)
+  - [Course Topics](#course-topics)
+  - [Booking Information](#booking-information)
+    - [1-on-1 Coaching Sessions Available](#1-on-1-coaching-sessions-available)
+    - [What's Included](#whats-included)
+  - [Get Started](#get-started)
+- [License](#license)
+
+
+##025-07-05 21:23:30 Features
 
 - **Four Bread Variants**: Plain, Sweet, Spicy, and Savory gluten-free bread
 - **Custom Recipes**: Each variant requires unique ingredients
@@ -12,14 +52,14 @@ A comprehensive Minecraft plugin that introduces **Gluten-Free Bread** variants,
 - **Configuration Support**: Customizable effects and settings
 - **Performance Optimized**: Event-driven architecture with caching
 
-## 🎮 Bread Variants
+## Bread Variants
 
 | Variant    | Display Name               | Effects                                   | Recipe Ingredients               |
 | ---------- | -------------------------- | ----------------------------------------- | -------------------------------- |
-| **Plain**  | §fPlain Gluten-Free Bread  | Regeneration I (10s)                      | Beetroot + Eggs                  |
-| **Sweet**  | §dSweet Gluten-Free Bread  | Regeneration II (10s), Speed I (15s)      | Beetroot + Eggs + Honey Bottle   |
-| **Spicy**  | §cSpicy Gluten-Free Bread  | Fire Resistance I (20s), Strength I (10s) | Beetroot + Eggs + Blaze Powder   |
-| **Savory** | §eSavory Gluten-Free Bread | Absorption I (15s), Regeneration I (10s)  | Beetroot + Eggs + Brown Mushroom |
+| **Plain**  | Plain Gluten Free Bread  | Regeneration I (10s)                      | Beetroot + Eggs                  |
+| **Sweet**  | Sweet Gluten Free Bread  | Regeneration II (10s), Speed I (15s)      | Beetroot + Eggs + Honey Bottle   |
+| **Spicy**  | Spicy Gluten Free Bread  | Fire Resistance I (20s), Strength I (10s) | Beetroot + Eggs + Blaze Powder   |
+| **Savory** | Savory Gluten Free Bread | Absorption I (15s), Regeneration I (10s)  | Beetroot + Eggs + Brown Mushroom |
 
 All breads feature:
 
@@ -27,7 +67,7 @@ All breads feature:
 - Custom lore describing their benefits
 - Unique colors for easy identification
 
-## 🛠 Installation
+## Installation
 
 ### Requirements
 
@@ -56,11 +96,11 @@ make build
 make install
 ```
 
-## 🎯 Usage
+## Usage
 
 ### Crafting Recipes
 
-#### Plain Gluten-Free Bread
+#### Plain Gluten Free Bread
 
 ```
 B B B
@@ -70,7 +110,7 @@ B B B
 
 Where: B = Beetroot, E = Egg
 
-#### Sweet Gluten-Free Bread
+#### Sweet Gluten Free Bread
 
 ```
 B B B
@@ -80,7 +120,7 @@ B B B
 
 Where: B = Beetroot, E = Egg, H = Honey Bottle
 
-#### Spicy Gluten-Free Bread
+#### Spicy Gluten Free Bread
 
 ```
 B B B
@@ -90,7 +130,7 @@ B B B
 
 Where: B = Beetroot, E = Egg, P = Blaze Powder
 
-#### Savory Gluten-Free Bread
+#### Savory Gluten Free Bread
 
 ```
 B B B
@@ -123,7 +163,7 @@ All commands require `glutenfreebread.admin` permission:
 /gfbread list                   # Show all bread types
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 Edit `plugins/GlutenFreeBread/config.yml`:
 
@@ -154,7 +194,7 @@ breads:
   # ... (other bread types)
 ```
 
-## 🔧 Development
+## Development
 
 ### Development Setup
 
@@ -198,7 +238,7 @@ make status
 make reset
 ```
 
-## 🐳 Docker Support
+## Docker Support
 
 Test the plugin easily with Docker:
 
@@ -215,13 +255,13 @@ Server will be available at:
 - **Java Edition**: `localhost:25565`
 - **Bedrock Edition**: `localhost:19132`
 
-## 📝 Permissions
+## Permissions
 
 - `glutenfreebread.craft` - Allow crafting (default: true)
 - `glutenfreebread.consume` - Allow consuming (default: true)
 - `glutenfreebread.admin` - Admin commands (default: op)
 
-## 🛡️ Overconsumption Protection
+## Overconsumption Protection
 
 The plugin tracks consumption to prevent abuse:
 
@@ -229,7 +269,7 @@ The plugin tracks consumption to prevent abuse:
 - **Effects**: Nausea and Slowness when exceeded
 - **Reset**: Automatically clears after time window
 
-## 🎨 Resource Pack Support
+## Resource Pack Support
 
 The plugin includes custom model data for resource pack compatibility:
 
@@ -238,20 +278,18 @@ The plugin includes custom model data for resource pack compatibility:
 - Spicy: `1002`
 - Savory: `1003`
 
-## 🔧 Technical Details
+## Technical Details
 
 ### Architecture
 
-- **Event-driven**: Minimal performance impact
-- **Cached items**: Pre-built ItemStacks for efficiency
+- **Event driven**: Minimal performance impact
+- **Cached items**: Prebuilt ItemStacks for efficiency
 - **Persistent data**: Reliable item identification
 - **Adventure API**: Modern text components
 
 ### Compatibility
 
 - **Paper**: 1.21.6+ (recommended)
-- **Spigot**: 1.21+
-- **Bukkit**: 1.21+
 - **Java**: 21+
 - **Geyser/Floodgate**: Compatible
 
@@ -262,7 +300,7 @@ The plugin includes custom model data for resource pack compatibility:
 - Minimal event processing overhead
 - Cleanup on player disconnect
 
-## 📋 API Usage
+## API Usage
 
 For developers wanting to integrate:
 
@@ -278,9 +316,9 @@ GlutenFreeBreadPlugin plugin = (GlutenFreeBreadPlugin) Bukkit.getPluginManager()
 Map<String, GlutenFreeBreadItem> breads = plugin.getBreadItems();
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Common Issues
+### Possible Issues
 
 **Plugin not loading:**
 
@@ -309,23 +347,52 @@ logging:
   debug: true
 ```
 
-## 📄 License
+## 🎓 Learn AI Powered Plugin Development
 
-Creative Commons Attribution-NonCommercial 4.0 International (CC BY-NC 4.0)
+**Want to build your own Minecraft plugins?** I built our plugin collection using generative AI, and I can teach you how to do the same!
 
-## 👥 Credits
+### What You'll Learn
 
-- **Author**: Carmelo Santana
-- **Website**: https://hv2.world
-- **Live Server**: play.hv2.world
-- **Docker Container**: [Legendary Minecraft Geyser](https://github.com/TheRemote/Legendary-Java-Minecraft-Geyser-Floodgate)
+- **AI Assisted Coding**: How to effectively use AI tools like GitHub Copilot, ChatGPT, and Claude for plugin development
+- **Plugin Architecture**: Best practices for structuring robust, maintainable Minecraft plugins
+- **Modern Development**: Paper API, Maven build systems, Docker testing, and CI/CD workflows
+- **Problem Solving**: How to break down complex features into manageable tasks
+- **Code Quality**: Testing, debugging, and optimizing AI generated code
 
-## 📞 Support
+### Course Topics
 
-- **Issues**: GitHub Issues
-- **Discord**: [HV2 World](https://discord.gg/udbJu8Sbyj)
-- **Test Server**: play.hv2.world
+- **Getting Started**: Setting up your AI development environment
+- **Plugin Fundamentals**: Events, commands, configuration, and permissions
+- **Advanced Features**: Custom items, recipes, data persistence, and performance optimization
+- **Testing & Deployment**: Docker containers, server management, and release workflows
+- **Real Projects**: Build actual plugins from concept to completion
 
----
+### Booking Information
 
-**Happy crafting! 🍞✨**
+#### 1-on-1 Coaching Sessions Available
+
+- **Duration**: 1-2 hour sessions
+- **Format**: Screen share coding sessions via video call
+- **Family Friendly**: Parents are welcome and encouraged to join sessions, especially for younger students and curious parents wanting to learn alongside their children.
+
+#### What's Included
+
+- ✅ Live coding demonstration
+- ✅ AI prompt engineering techniques
+- ✅ Complete project setup and tooling
+- ✅ Plugin publishing and distribution
+- ✅ Follow up support and code review
+
+### Get Started
+
+Ready to accelerate your development with AI?
+
+- **[Schedule your call](https://cal.com/carmelosantana/learn-minecraft-with-ai)** - Book a session today!
+- **[Discord](https://discord.gg/udbJu8Sbyj)** - Ask questions, see examples.
+- **Public SMP Server** - Join us at `play.xp.farm` and test our plugins live!
+
+*Turn your plugin ideas into reality in hours, not weeks!*
+
+## License
+
+This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](https://creativecommons.org/licenses/by-nc/4.0/).
