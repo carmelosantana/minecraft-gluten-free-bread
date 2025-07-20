@@ -4,14 +4,14 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.carmelosantana</groupId>
+    <groupId>farm.xp</groupId>
     <artifactId>gluten-free-bread</artifactId>
-    <version>0.0.1</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>GlutenFreeBread</name>
-    <description>A Minecraft plugin that adds gluten-free bread variants with unique health benefits</description>
-    <url>https://hv2.world</url>
+    <description>A Minecraft plugin that adds gluten free bread variants with unique health benefits</description>
+    <url>https://github.com/carmelosantana/minecraft-gluten-free-bread</url>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>

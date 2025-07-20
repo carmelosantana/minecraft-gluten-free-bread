@@ -1,17 +1,19 @@
 #!/bin/bash
-# Server Management Script for Gluten-Free Bread Plugin
-# Compatible with macOS and Linux
 
-set -euo pipefail
+# Gluten-Free Bread Plugin Server Manager
+# Manages a local Minecraft server for plugin development and testing
+
+set -e
 
 # Configuration
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SERVER_DIR="${SCRIPT_DIR}/server"
-PLUGIN_JAR="${SCRIPT_DIR}/target/gluten-free-bread-1.0.1.jar"
-SERVER_JAR="${SERVER_DIR}/paper.jar"
-WORLD_DIR="${SERVER_DIR}/world"
-PLUGINS_DIR="${SERVER_DIR}/plugins"
-LOGS_DIR="${SERVER_DIR}/logs"
+SERVER_DIR="server"
+PLUGIN_NAME="gluten-free-bread"
+PLUGIN_JAR="target/${PLUGIN_NAME}-1.0.1.jar"
+SERVER_JAR="paper.jar"
+MIN_RAM="2G"
+MAX_RAM="4G"
+SERVER_PORT="25565"
+JAVA_ARGS="-Xms${MIN_RAM} -Xmx${MAX_RAM} -XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1HeapRegionSize=8M -XX:G1ReservePercent=20 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Dusing.aikars.flags=https://mcflags.emc.gs -Daikars.new.flags=true"
 
 # Colors for output
 RED='\033[0;31m'
@@ -20,28 +22,27 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Logging function
-log() {
-    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+# Print colored output
+print_status() {
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
-error() {
-    echo -e "${RED}[ERROR]${NC} $1" >&2
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
-warn() {
+print_warning() {
     echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
-info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
 # Check if Java is installed and get version
 check_java() {
     if ! command -v java &> /dev/null; then
-        error "Java is not installed or not in PATH"
-        info "Please install Java 21 or higher"
+        print_error "Java is not installed. Please install Java 21 or higher."
         exit 1
     fi
     
@@ -49,207 +50,120 @@ check_java() {
     java_version=$(java -version 2>&1 | head -n 1 | cut -d'"' -f2 | cut -d'.' -f1)
     
     if [[ "$java_version" -lt 21 ]]; then
-        error "Java 21 or higher is required. Current version: $java_version"
+        print_error "Java 21 or higher is required. Found Java $java_version"
         exit 1
     fi
     
-    log "Java version: $java_version ✓"
-}
-
-# Download ViaVersion plugin for compatibility
-download_viaversion() {
-    local viaversion_jar="${PLUGINS_DIR}/ViaVersion.jar"
-    
-    if [[ ! -f "$viaversion_jar" ]]; then
-        log "Downloading ViaVersion for better compatibility..."
-        mkdir -p "$PLUGINS_DIR"
-        
-        # Download latest ViaVersion
-        local via_url="https://ci.viaversion.com/job/ViaVersion/lastSuccessfulBuild/artifact/build/libs/ViaVersion-5.4.1-SNAPSHOT.jar"
-        
-        if command -v curl &> /dev/null; then
-            curl -L -o "$viaversion_jar" "$via_url" || {
-                warn "Failed to download ViaVersion from CI, trying GitHub releases..."
-                curl -L -o "$viaversion_jar" "https://github.com/ViaVersion/ViaVersion/releases/download/5.1.1/ViaVersion-5.1.1.jar"
-            }
-        elif command -v wget &> /dev/null; then
-            wget -O "$viaversion_jar" "$via_url" || {
-                warn "Failed to download ViaVersion from CI, trying GitHub releases..."
-                wget -O "$viaversion_jar" "https://github.com/ViaVersion/ViaVersion/releases/download/5.1.1/ViaVersion-5.1.1.jar"
-            }
-        else
-            error "Neither curl nor wget is available. Please install one of them."
-            exit 1
-        fi
-        
-        if [[ -f "$viaversion_jar" ]]; then
-            log "ViaVersion downloaded successfully"
-        else
-            warn "Failed to download ViaVersion - Geyser may have compatibility issues"
-        fi
-    else
-        log "ViaVersion already exists"
-    fi
+    print_success "Java $java_version detected"
 }
 
 # Download Paper server if not exists
-download_server() {
-    if [[ ! -f "$SERVER_JAR" ]]; then
-        log "Downloading Paper server..."
+download_paper() {
+    if [[ ! -f "$SERVER_DIR/$SERVER_JAR" ]]; then
+        print_status "Downloading Paper server..."
         mkdir -p "$SERVER_DIR"
         
-        # Download latest Paper 1.21.6
-        local paper_url="https://api.papermc.io/v2/projects/paper/versions/1.21.6/builds/latest/downloads/paper-1.21.6-latest.jar"
+        # Get latest Paper build for 1.21.6
+        local paper_version="1.21.6"
+        local paper_url="https://api.papermc.io/v2/projects/paper/versions/${paper_version}/builds"
+        local latest_build
+        latest_build=$(curl -s "$paper_url" | grep -o '"build":[0-9]*' | tail -1 | cut -d':' -f2)
         
-        if command -v curl &> /dev/null; then
-            curl -o "$SERVER_JAR" "$paper_url" || {
-                warn "Failed to download latest, trying specific build..."
-                curl -o "$SERVER_JAR" "https://api.papermc.io/v2/projects/paper/versions/1.21.6/builds/17/downloads/paper-1.21.6-17.jar"
-            }
-        elif command -v wget &> /dev/null; then
-            wget -O "$SERVER_JAR" "$paper_url" || {
-                warn "Failed to download latest, trying specific build..."
-                wget -O "$SERVER_JAR" "https://api.papermc.io/v2/projects/paper/versions/1.21.6/builds/17/downloads/paper-1.21.6-17.jar"
-            }
-        else
-            error "Neither curl nor wget is available. Please install one of them."
+        if [[ -z "$latest_build" ]]; then
+            print_error "Failed to get latest Paper build"
             exit 1
         fi
         
-        log "Paper server downloaded successfully"
+        local download_url="https://api.papermc.io/v2/projects/paper/versions/${paper_version}/builds/${latest_build}/downloads/paper-${paper_version}-${latest_build}.jar"
+        
+        print_status "Downloading Paper ${paper_version} build ${latest_build}..."
+        curl -o "$SERVER_DIR/$SERVER_JAR" "$download_url"
+        
+        print_success "Paper server downloaded"
     else
-        log "Paper server already exists"
+        print_status "Paper server already exists"
     fi
 }
 
 # Setup server environment
 setup_server() {
-    log "Setting up server environment..."
+    print_status "Setting up server environment..."
     
     check_java
-    download_server
-    download_viaversion
+    download_paper
     
-    # Create necessary directories
-    mkdir -p "$PLUGINS_DIR" "$LOGS_DIR"
+    # Create server directory
+    mkdir -p "$SERVER_DIR/plugins"
     
-    # Create eula.txt
-    echo "eula=true" > "${SERVER_DIR}/eula.txt"
+    # Accept EULA
+    echo "eula=true" > "$SERVER_DIR/eula.txt"
     
     # Create server.properties
-    cat > "${SERVER_DIR}/server.properties" << EOF
-# Minecraft Server Properties
-server-port=25565
+    cat > "$SERVER_DIR/server.properties" << EOF
+#Minecraft server properties
+server-port=${SERVER_PORT}
 gamemode=survival
 difficulty=normal
-spawn-protection=16
+spawn-protection=0
 max-players=20
-online-mode=true
+online-mode=false
 white-list=false
-spawn-monsters=true
-spawn-animals=true
-spawn-npcs=true
-pvp=true
-level-name=world
-level-seed=
-level-type=minecraft:normal
-generator-settings=
 motd=Gluten-Free Bread Test Server
-enable-command-block=true
-enable-query=false
-enable-rcon=false
-op-permission-level=4
-player-idle-timeout=0
-max-world-size=29999984
-network-compression-threshold=256
-resource-pack=
-resource-pack-sha1=
-server-ip=
-allow-flight=false
 view-distance=10
 simulation-distance=10
-max-build-height=320
-enforce-whitelist=false
-entity-broadcast-range-percentage=100
-rate-limit=0
-max-tick-time=60000
-use-native-transport=true
-enable-status=true
-broadcast-rcon-to-ops=true
-sync-chunk-writes=true
-enable-jmx-monitoring=false
-broadcast-console-to-ops=true
-enforce-secure-profile=true
-log-ips=true
-hide-online-players=false
+enable-command-block=true
+op-permission-level=4
 EOF
 
-    log "Server setup completed"
+    print_success "Server environment setup complete"
 }
 
-# Build the plugin
-build_plugin() {
-    log "Building plugin..."
-    
-    if [[ ! -f "${SCRIPT_DIR}/pom.xml" ]]; then
-        error "pom.xml not found. Are you in the plugin directory?"
-        exit 1
-    fi
-    
-    cd "$SCRIPT_DIR"
-    mvn clean package -q
-    
-    if [[ ! -f "$PLUGIN_JAR" ]]; then
-        error "Plugin build failed. JAR file not found."
-        exit 1
-    fi
-    
-    log "Plugin built successfully"
-}
-
-# Install plugin to server
+# Build and install plugin
 install_plugin() {
     if [[ ! -f "$PLUGIN_JAR" ]]; then
-        warn "Plugin JAR not found. Building plugin first..."
-        build_plugin
+        print_error "Plugin JAR not found. Run 'make build' first."
+        exit 1
     fi
     
-    if [[ ! -d "$PLUGINS_DIR" ]]; then
-        warn "Plugins directory not found. Setting up server first..."
-        setup_server
-    fi
-    
-    log "Installing plugin to server..."
-    cp "$PLUGIN_JAR" "$PLUGINS_DIR/"
-    log "Plugin installed successfully"
+    print_status "Installing plugin..."
+    cp "$PLUGIN_JAR" "$SERVER_DIR/plugins/"
+    print_success "Plugin installed"
 }
 
 # Start the server
 start_server() {
-    if [[ ! -f "$SERVER_JAR" ]]; then
-        warn "Server not set up. Running setup first..."
-        setup_server
-    fi
-    
     if is_server_running; then
-        warn "Server is already running"
-        return 0
+        print_warning "Server is already running"
+        return
     fi
     
-    log "Starting Minecraft server..."
+    if [[ ! -f "$SERVER_DIR/$SERVER_JAR" ]]; then
+        print_error "Server JAR not found. Run 'make setup' first."
+        exit 1
+    fi
+    
+    print_status "Starting Minecraft server..."
+    
     cd "$SERVER_DIR"
+    screen -dmS minecraft java $JAVA_ARGS -jar "$SERVER_JAR" --nogui
+    cd ..
     
-    # Start server in background
-    nohup java -Xmx2G -Xms1G -jar "$SERVER_JAR" nogui > "${LOGS_DIR}/server.log" 2>&1 &
-    echo $! > "${SERVER_DIR}/server.pid"
+    # Wait for server to start
+    local attempts=0
+    while ! is_server_running && [[ $attempts -lt 30 ]]; do
+        sleep 2
+        ((attempts++))
+        echo -n "."
+    done
+    echo ""
     
-    # Wait a bit and check if server started
-    sleep 5
     if is_server_running; then
-        log "Server started successfully (PID: $(cat "${SERVER_DIR}/server.pid"))"
-        log "Server logs: tail -f ${LOGS_DIR}/server.log"
+        print_success "Server started successfully"
+        print_status "Server is running on port $SERVER_PORT"
+        print_status "Use 'make attach' to attach to the server console"
+        print_status "Use 'make logs' to view server logs"
     else
-        error "Failed to start server"
+        print_error "Server failed to start"
         exit 1
     fi
 }
@@ -257,179 +171,227 @@ start_server() {
 # Stop the server
 stop_server() {
     if ! is_server_running; then
-        warn "Server is not running"
-        return 0
+        print_warning "Server is not running"
+        return
     fi
     
-    log "Stopping Minecraft server..."
+    print_status "Stopping server..."
+    screen -S minecraft -p 0 -X stuff "stop$(printf \\r)"
     
-    local pid
-    pid=$(cat "${SERVER_DIR}/server.pid" 2>/dev/null || echo "")
+    # Wait for server to stop
+    local attempts=0
+    while is_server_running && [[ $attempts -lt 30 ]]; do
+        sleep 1
+        ((attempts++))
+    done
     
-    if [[ -n "$pid" ]]; then
-        # Send stop command to server
-        echo "stop" > "${SERVER_DIR}/server.stdin" 2>/dev/null || true
-        
-        # Wait for graceful shutdown
-        sleep 10
-        
-        # Force kill if still running
-        if kill -0 "$pid" 2>/dev/null; then
-            warn "Server didn't stop gracefully, force killing..."
-            kill -9 "$pid" 2>/dev/null || true
+    if ! is_server_running; then
+        print_success "Server stopped successfully"
+    else
+        print_warning "Server did not stop gracefully, killing process..."
+        screen -S minecraft -X quit
+        sleep 2
+        if is_server_running; then
+            print_error "Failed to stop server"
+            exit 1
+        else
+            print_success "Server stopped forcefully"
         fi
-        
-        rm -f "${SERVER_DIR}/server.pid"
     fi
-    
-    log "Server stopped"
 }
 
 # Check if server is running
 is_server_running() {
-    if [[ -f "${SERVER_DIR}/server.pid" ]]; then
-        local pid
-        pid=$(cat "${SERVER_DIR}/server.pid")
-        kill -0 "$pid" 2>/dev/null
-    else
-        return 1
-    fi
+    screen -list | grep -q "minecraft"
 }
 
 # Show server status
 show_status() {
     if is_server_running; then
-        local pid
-        pid=$(cat "${SERVER_DIR}/server.pid")
-        log "Server is RUNNING (PID: $pid)"
+        print_success "Server is running"
         
-        # Show resource usage if available
-        if command -v ps &> /dev/null; then
-            local mem_usage
-            mem_usage=$(ps -p "$pid" -o rss= 2>/dev/null | awk '{print int($1/1024)}' || echo "unknown")
-            info "Memory usage: ${mem_usage}MB"
+        # Show server info
+        local server_pid
+        server_pid=$(screen -list | grep minecraft | cut -d. -f1 | xargs)
+        if [[ -n "$server_pid" ]]; then
+            print_status "Server PID: $server_pid"
+        fi
+        
+        # Check if port is open
+        if command -v lsof &> /dev/null; then
+            if lsof -i ":$SERVER_PORT" &> /dev/null; then
+                print_status "Server is listening on port $SERVER_PORT"
+            else
+                print_warning "Server process running but not listening on port $SERVER_PORT"
+            fi
         fi
     else
-        warn "Server is STOPPED"
+        print_warning "Server is not running"
     fi
 }
 
-# Show server logs
+# Show recent server logs
 show_logs() {
-    if [[ -f "${LOGS_DIR}/server.log" ]]; then
-        tail -n 50 "${LOGS_DIR}/server.log"
+    if [[ -f "$SERVER_DIR/logs/latest.log" ]]; then
+        tail -n 50 "$SERVER_DIR/logs/latest.log"
     else
-        warn "No server logs found"
+        print_warning "No server logs found"
     fi
 }
 
-# Clean server data
-clean_server() {
-    if is_server_running; then
-        error "Cannot clean while server is running. Stop the server first."
+# Attach to server console
+attach_server() {
+    if ! is_server_running; then
+        print_error "Server is not running"
         exit 1
     fi
     
-    warn "This will remove all server data including worlds and player data."
+    print_status "Attaching to server console..."
+    print_status "Use Ctrl+A then D to detach from the console"
+    screen -r minecraft
+}
+
+# Reset server (clean world and restart)
+reset_server() {
+    print_warning "This will delete the world and restart the server!"
     read -p "Are you sure? (y/N): " -n 1 -r
     echo
     
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        log "Cleaning server data..."
-        rm -rf "$SERVER_DIR"
-        log "Server data cleaned"
-    else
-        log "Clean operation cancelled"
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_status "Reset cancelled"
+        return
     fi
+    
+    stop_server
+    
+    print_status "Removing world files..."
+    rm -rf "$SERVER_DIR/world" "$SERVER_DIR/world_nether" "$SERVER_DIR/world_the_end"
+    rm -f "$SERVER_DIR/usercache.json" "$SERVER_DIR/session.lock"
+    
+    install_plugin
+    start_server
+    
+    print_success "Server reset complete"
+}
+
+# Clean all server files
+clean_server() {
+    print_warning "This will delete ALL server files!"
+    read -p "Are you sure? (y/N): " -n 1 -r
+    echo
+    
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        print_status "Clean cancelled"
+        return
+    fi
+    
+    stop_server
+    
+    print_status "Removing server files..."
+    rm -rf "$SERVER_DIR"
+    
+    print_success "Server files cleaned"
 }
 
 # Show network information
 show_network() {
-    info "Network Configuration:"
-    echo "  Local server: localhost:25565"
-    echo "  LAN server: $(hostname -I | awk '{print $1}' 2>/dev/null || echo "IP not found"):25565"
-    echo ""
-    echo "To connect from other devices on your network:"
-    echo "  1. Find your local IP address"
-    echo "  2. Make sure port 25565 is open in your firewall"
-    echo "  3. Connect to <your-ip>:25565"
+    print_status "Network Configuration:"
+    
+    # Get local IP
+    if command -v ifconfig &> /dev/null; then
+        local_ip=$(ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0.1' | head -1)
+    elif command -v ip &> /dev/null; then
+        local_ip=$(ip route get 8.8.8.8 | sed -n '/src/{s/.*src *\([^ ]*\).*/\1/p;q}')
+    else
+        local_ip="unknown"
+    fi
+    
+    echo "Local IP: $local_ip"
+    echo "Server Port: $SERVER_PORT"
+    echo "Local Connection: $local_ip:$SERVER_PORT"
+    
+    # Check if port is open
+    if command -v lsof &> /dev/null && lsof -i ":$SERVER_PORT" &> /dev/null; then
+        print_success "Server is accepting connections on port $SERVER_PORT"
+    else
+        print_warning "Server is not listening on port $SERVER_PORT"
+    fi
 }
 
 # Show online players
 show_players() {
     if ! is_server_running; then
-        warn "Server is not running"
-        return 0
+        print_error "Server is not running"
+        exit 1
     fi
     
-    info "Online players (check server logs for details):"
-    grep -E "(joined|left) the game" "${LOGS_DIR}/server.log" 2>/dev/null | tail -10 || echo "No recent player activity"
+    print_status "Getting online players..."
+    screen -S minecraft -p 0 -X stuff "list$(printf \\r)"
+    sleep 1
+    
+    if [[ -f "$SERVER_DIR/logs/latest.log" ]]; then
+        grep "There are" "$SERVER_DIR/logs/latest.log" | tail -1
+    fi
 }
 
 # Main command handler
-main() {
-    case "${1:-help}" in
-        setup)
-            setup_server
-            ;;
-        build)
-            build_plugin
-            ;;
-        install)
-            install_plugin
-            ;;
-        start)
-            start_server
-            ;;
-        stop)
-            stop_server
-            ;;
-        restart)
-            stop_server
-            sleep 2
-            start_server
-            ;;
-        status)
-            show_status
-            ;;
-        logs)
-            show_logs
-            ;;
-        clean)
-            clean_server
-            ;;
-        reset)
-            stop_server
-            rm -rf "$WORLD_DIR" "${PLUGINS_DIR:?}/"*.jar
-            install_plugin
-            start_server
-            ;;
-        network)
-            show_network
-            ;;
-        players)
-            show_players
-            ;;
-        help|*)
-            echo "Usage: $0 {setup|build|install|start|stop|restart|status|logs|clean|reset|network|players|help}"
-            echo ""
-            echo "Commands:"
-            echo "  setup    - Set up server environment"
-            echo "  build    - Build the plugin"
-            echo "  install  - Install plugin to server"
-            echo "  start    - Start the server"
-            echo "  stop     - Stop the server"
-            echo "  restart  - Restart the server"
-            echo "  status   - Show server status"
-            echo "  logs     - Show recent server logs"
-            echo "  clean    - Remove all server data"
-            echo "  reset    - Reset world and restart with fresh plugin"
-            echo "  network  - Show network configuration"
-            echo "  players  - Show recent player activity"
-            echo "  help     - Show this help message"
-            ;;
-    esac
-}
-
-# Run main function with all arguments
-main "$@"
+case "${1:-help}" in
+    setup)
+        setup_server
+        ;;
+    start)
+        start_server
+        ;;
+    stop)
+        stop_server
+        ;;
+    restart)
+        stop_server
+        sleep 2
+        start_server
+        ;;
+    status)
+        show_status
+        ;;
+    logs)
+        show_logs
+        ;;
+    attach)
+        attach_server
+        ;;
+    install)
+        install_plugin
+        ;;
+    reset)
+        reset_server
+        ;;
+    clean)
+        clean_server
+        ;;
+    network)
+        show_network
+        ;;
+    players)
+        show_players
+        ;;
+    help|*)
+        echo "Gluten-Free Bread Plugin Server Manager"
+        echo ""
+        echo "Usage: $0 <command>"
+        echo ""
+        echo "Commands:"
+        echo "  setup     - Set up server environment"
+        echo "  start     - Start the server"
+        echo "  stop      - Stop the server"
+        echo "  restart   - Restart the server"
+        echo "  status    - Show server status"
+        echo "  logs      - Show recent server logs"
+        echo "  attach    - Attach to server console"
+        echo "  install   - Install/update plugin"
+        echo "  reset     - Reset server (clean world, restart)"
+        echo "  clean     - Remove all server files"
+        echo "  network   - Show network configuration"
+        echo "  players   - Show online players"
+        echo "  help      - Show this help message"
+        ;;
+esac

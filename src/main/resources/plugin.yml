@@ -3,7 +3,7 @@ version: '${project.version}'
 main: com.carmelosantana.glutenfreebread.GlutenFreeBreadPlugin
 description: A Minecraft plugin that adds gluten-free bread variants with unique health benefits
 authors: [Carmelo Santana]
-website: https://hv2.world
+website: https://xp.farm
 api-version: '1.21'
 depend: []
 softdepend: []

@@ -1,7 +1,7 @@
 # Makefile for Gluten-Free Bread Plugin Server Management
 # Provides convenient shortcuts for common development tasks
 
-.PHONY: help setup start stop restart reset clean status logs build install test dev docker-build docker-test
+.PHONY: help setup start stop restart reset clean status logs build install test dev docker-build docker-test debug test-commands network attach players
 
 # Default target
 help: ## Show this help message
@@ -77,17 +77,39 @@ docker-test: docker-build ## Test plugin in Docker container
 	@./docker-test.sh
 	@echo "✅ Docker test completed"
 
-network: ## Show network configuration for external access
+debug: ## Debug plugin functionality in running server
+	@echo "=== Debug Commands ==="
+	@echo "Running interactive debug script..."
+	@./debug-plugin.sh
+
+test-commands: build install ## Build, install and show test commands
+	@echo "Plugin installed! Test with these commands:"
+	@echo ""
+	@echo "=== Player Commands ==="
+	@echo "  /gluten version       - Show version info"
+	@echo "  /gluten help          - Show available commands"
+	@echo ""
+	@echo "=== Admin Commands (op required) ==="
+	@echo "  /gluten reload        - Reload config"
+	@echo "  /gluten status        - Show plugin status"
+	@echo "  /gluten give <player> <type> [amount] - Give gluten-free bread"
+	@echo ""
+	@echo "To test, restart server: make restart"
+
+network: ## Check network connectivity and display server info
 	@./server-manager.sh network
 
-players: ## Show online players
+attach: ## Attach to the running server console
+	@./server-manager.sh attach
+
+players: ## List online players
 	@./server-manager.sh players
 
 version: ## Show versions of Java, Maven, and plugin
 	@echo "=== Version Information ==="
 	@echo "Java: $$(java -version 2>&1 | head -n 1)"
 	@echo "Maven: $$(mvn -version 2>&1 | head -n 1)"
-	@echo "Plugin: $$(grep -A 1 '<version>' pom.xml | tail -n 1 | sed 's/.*<version>\\(.*\\)<\\/version>.*/\\1/')"
+	@echo "Plugin: $$(grep '<version>' pom.xml | head -n 1 | sed 's/.*<version>\(.*\)<\/version>.*/\1/' | xargs)"
 	@echo "Docker: $$(docker --version)"
 
 lint: ## Check code quality with shellcheck
