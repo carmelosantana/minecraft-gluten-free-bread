@@ -70,7 +70,7 @@ All breads feature:
 ### Requirements
 
 - **Java**: 21 or higher
-- **Server**: Paper 1.21.6+, Spigot 1.21+, or Bukkit 1.21+
+- **Server**: Paper 26.1.2+
 - **Maven**: For building from source
 
 ### Quick Install
@@ -252,7 +252,7 @@ The plugin includes custom model data for resource pack compatibility:
 
 ### Compatibility
 
-- **Paper**: 1.21.6+ (recommended)
+- **Paper**: 26.1.2+ (recommended)
 - **Java**: 21+
 - **Geyser/Floodgate**: Compatible
 
