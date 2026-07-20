@@ -2,6 +2,7 @@ package com.carmelosantana.glutenfreebread.commands;
 
 import com.carmelosantana.glutenfreebread.GlutenFreeBreadPlugin;
 import com.carmelosantana.glutenfreebread.items.GlutenFreeBreadItem;
+import com.carmelosantana.glutenfreebread.util.PlayerLookup;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -114,21 +115,23 @@ public class GFBreadCommand implements CommandExecutor, TabCompleter {
                 return giveBreadToPlayer(sender, sender, breadItem, amount);
             } catch (NumberFormatException e) {
                 // Treat as player name
-                Player target = Bukkit.getPlayer(args[2]);
+                Player target = PlayerLookup.resolveAllowingPartial(args[2]).orElse(null);
                 if (target == null) {
-                    sender.sendMessage(Component.text("Player not found: " + args[2], NamedTextColor.RED));
+                    sender.sendMessage(Component.text(
+                        PlayerLookup.noSuchPlayerMessage(args[2], PlayerLookup.onlineNames()), NamedTextColor.RED));
                     return true;
                 }
                 return giveBreadToPlayer(sender, target, breadItem, 1);
             }
         } else if (args.length == 4) {
             // /gfbread give <type> <player> <amount>
-            Player target = Bukkit.getPlayer(args[2]);
+            Player target = PlayerLookup.resolveAllowingPartial(args[2]).orElse(null);
             if (target == null) {
-                sender.sendMessage(Component.text("Player not found: " + args[2], NamedTextColor.RED));
+                sender.sendMessage(Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[2], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
-            
+
             try {
                 int amount = Integer.parseInt(args[3]);
                 return giveBreadToPlayer(sender, target, breadItem, amount);
@@ -222,9 +225,10 @@ public class GFBreadCommand implements CommandExecutor, TabCompleter {
         
         Player target;
         if (args.length > 1) {
-            target = Bukkit.getPlayer(args[1]);
+            target = PlayerLookup.resolveAllowingPartial(args[1]).orElse(null);
             if (target == null) {
-                sender.sendMessage(Component.text("Player not found: " + args[1], NamedTextColor.RED));
+                sender.sendMessage(Component.text(
+                    PlayerLookup.noSuchPlayerMessage(args[1], PlayerLookup.onlineNames()), NamedTextColor.RED));
                 return true;
             }
         } else {
