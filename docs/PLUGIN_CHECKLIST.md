@@ -64,12 +64,15 @@ Checks 1-6 are **not verified** — see §7a.
   sweep and the partial-match tier.
 - `PlayerLookup.resolve` and `resolveAllowingPartial` are not unit-tested: both call `Bukkit`
   statics that cannot be constructed headlessly. Only the pure functions are covered.
-- **The releasable JAR is compiled for Java 21, not Java 25 — a standing violation of the
-  ecosystem "compile with Java 25" standard.** JAR inspection at gate 6 read bytecode major
-  version **65 (Java 21)**; every other ecosystem plugin reads 69 (Java 25). `maven-compiler-plugin`
-  hardcodes `<source>/<target>/<release>` to `21`, overriding the pom's `maven.compiler.release=25`
-  property. Pre-existing and not introduced by this change; the pom fix is out of scope here and
-  needs its own change with a rebuild and runtime re-verification. See gate 6 for detail.
+- ~~**The releasable JAR is compiled for Java 21, not Java 25.**~~ **RESOLVED in 1.1.3.** The
+  `maven-compiler-plugin` `<configuration>` block hardcoding `<source>/<target>/<release>` to `21`
+  is removed, so the pom's `maven.compiler.release=25` property is now the single source of truth.
+  Verified against the built `gluten-free-bread-1.1.3.jar`: **all nine class entries read bytecode
+  major 69 (Java 25)**, checked exhaustively rather than sampled. `maven-shade-plugin` was removed
+  in the same change — it shaded nothing (every dependency is `provided`/`test` scope) and existed
+  only to emit the `original-*.jar` the release workflow then filtered; `target/` now contains
+  exactly one JAR. Confirmed safe against `.github/workflows/build.yml` first: CI filters
+  `original-*` but never requires shading.
 
 ## 2. Repository
 
@@ -89,7 +92,13 @@ Checks 1-6 are **not verified** — see §7a.
 ## 4. Compatibility
 
 - [x] Java 25 / Paper 26.1.2 build 74 compile succeeds. `mvn --batch-mode --no-transfer-progress
-      clean verify` → `BUILD SUCCESS`, producing `gluten-free-bread-1.1.2.jar`.
+      clean verify` → `BUILD SUCCESS`, producing `gluten-free-bread-1.1.3.jar`, with all nine class
+      entries at bytecode major 69 (Java 25).
+
+      **Correction:** this box was ticked for `1.1.2` on the strength of `BUILD SUCCESS` alone,
+      which was misleading — that build emitted Java 21 bytecode (major 65) because the compiler
+      plugin overrode the release property. A green build is not evidence of the compile target;
+      only reading the class files is. Verified that way from `1.1.3` onward.
 - [x] Geyser/Floodgate review covers Bedrock-safe identity behavior. This release *is* that fix —
       see §1. No new player-facing interaction is introduced.
 - [ ] Hard/soft dependencies and load ordering re-reviewed. Unchanged by this release; `softdepend:
@@ -112,30 +121,24 @@ Checks 1-6 are **not verified** — see §7a.
       `Tests run: 6, Failures: 0, Errors: 0, Skipped: 0` / `BUILD SUCCESS`. Confirmed executed via
       `target/surefire-reports/TEST-…PlayerLookupTest$TargetResolution.xml` (`tests="6"`).
 - [x] The releasable JAR and embedded `plugin.yml` were inspected; `original-*` JARs are excluded.
-      Verified by unzipping the built JAR. Embedded `plugin.yml` reads `version: '1.1.2'`,
-      `api-version: '1.21'`, `main: com.carmelosantana.glutenfreebread.GlutenFreeBreadPlugin`.
+      Verified for `1.1.3` by unzipping the built JAR. Embedded `plugin.yml` reads
+      `version: '1.1.3'`, `api-version: '1.21'`,
+      `main: com.carmelosantana.glutenfreebread.GlutenFreeBreadPlugin`.
 
-      **⚠️ KNOWN LIMITATION — this JAR is compiled for Java 21, not Java 25.** The bytecode major
-      version of the first `.class` entry is **65 (Java 21)**, where every other plugin in the
-      ecosystem reads 69 (Java 25). This violates the ecosystem standard "compile with Java 25".
-      Cause: `maven-compiler-plugin` in `pom.xml` hardcodes `<source>21</source>`,
-      `<target>21</target>`, and `<release>21</release>`, which override the pom's own
-      `maven.compiler.release=25` property. **This is pre-existing and predates this change.** It
-      is deliberately *not* fixed here — a pom correction is out of scope for this bugfix and needs
-      its own change with a full rebuild and runtime re-verification.
+      **Java 25 compile target confirmed — the 1.1.2 violation is resolved.** All nine `.class`
+      entries in `gluten-free-bread-1.1.3.jar` read bytecode major **69 (Java 25)**, checked
+      exhaustively rather than sampled. Through 1.1.2 the JAR read major 65 (Java 21) because
+      `maven-compiler-plugin` hardcoded `<source>/<target>/<release>` to `21`, overriding the pom's
+      `maven.compiler.release=25`. That `<configuration>` block is removed in 1.1.3; the property
+      is now the single source of truth, matching `agua-de-florida`.
 
-      **`original-*` exclusion is at the CI release-asset step, not at build time.** `target/`
-      contains both `gluten-free-bread-1.1.2.jar` and `original-gluten-free-bread-1.1.2.jar` — the
-      `original-*` JAR *is* still produced locally. It is excluded from released assets by
-      `.github/workflows/build.yml`, which filters `! -name 'original-*'` on both the SHA256SUMS
-      step and the `gh release upload` step (and excludes `!target/original-*.jar` from the
-      uploaded build artifact). So no `original-*` JAR can reach a release, but one does exist on
-      disk after a local build.
-
-      `maven-shade-plugin` is a **no-op** here: every dependency is `provided`/`test` scope, so it
-      shades nothing and exists only to rename the untouched jar, which is what creates the
-      `original-*` file. `agua-de-florida` resolved this by removing shading entirely; doing the
-      same here is out of scope for this change.
+      **`original-*` can no longer be produced at all.** `maven-shade-plugin` was removed in
+      `1.1.3` — every dependency is `provided`/`test` scope, so it shaded nothing and existed only
+      to rename the untouched jar, which is what created the `original-*` file. `target/` now
+      contains exactly one JAR (`gluten-free-bread-1.1.3.jar`). Removal was confirmed safe against
+      `.github/workflows/build.yml` first: CI *filters* `original-*` on the SHA256SUMS step, the
+      `gh release upload` step, and the uploaded build artifact, but never *requires* shading. The
+      release contract is now satisfied at build time rather than by a CI filter.
 
 ## 7. Matrix
 

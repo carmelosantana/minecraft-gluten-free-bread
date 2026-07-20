@@ -2,6 +2,24 @@
 
 All notable changes to Gluten-Free Bread are documented here.
 
+## 1.1.3 - 2026-07-20
+
+### Fixed
+
+- The plugin now actually compiles to Java 25, the ecosystem target. `maven-compiler-plugin`
+  hardcoded `<source>21</source><target>21</target><release>21</release>`, which overrode the
+  `maven.compiler.release=25` property, so every release through 1.1.2 shipped Java 21 bytecode
+  (class file major 65) while the POM claimed 25. The plugin configuration is removed; the
+  property is now the single source of truth. Verified against the built JAR: all classes are
+  major 69.
+
+### Removed
+
+- `maven-shade-plugin`. Every dependency is `provided` or `test` scope, so it shaded nothing
+  while still emitting an `original-*.jar` that the release workflow had to filter out. Removing
+  it eliminates the artifact rather than working around it. Confirmed against
+  `.github/workflows/build.yml` first: CI filters `original-*` but never requires shading.
+
 ## 1.1.2 - 2026-07-20
 
 ### Fixed
