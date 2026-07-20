@@ -196,23 +196,33 @@ JARs mounted together**. The same run backs the gate 7a note in all six reposito
 
 - [x] Standard plugin Actions workflow is installed at `.github/workflows/build.yml`. Present from
       `1.1.0`.
-- [x] Successful main Actions run recorded before tagging. `fix/floodgate-name-resolution` was
-      merged fast-forward to `main` and pushed on 2026-07-20. The `main`-branch Actions run for
-      commit `1447dc2` completed with conclusion `success` **before** tag `v1.1.2` was created. No
-      tag was pushed against a red or in-flight run.
+- [x] Successful main Actions run recorded before tagging. For `1.1.3`:
+      `fix/java-25-compile-target` was merged fast-forward to `main` and pushed on 2026-07-20; the
+      `main`-branch run for commit `767c8d2` completed with conclusion `success` **before** tag
+      `v1.1.3` was created. Previously for `1.1.2`: `fix/floodgate-name-resolution` merged
+      fast-forward, `main` run for commit `1447dc2` `success` before `v1.1.2`. No tag has been
+      pushed against a red or in-flight run.
 
-## 9. Release — `v1.1.2` COMPLETE
+## 9. Release — `v1.1.3` COMPLETE
 
 - [x] Semantic version matches the POM, plugin metadata, and `v<version>` tag. Verified: `pom.xml`
-      `<version>` `1.1.2` equals tag `v1.1.2` equals the `plugin.yml` version read out of the built
+      `<version>` `1.1.3` equals tag `v1.1.3` equals the `plugin.yml` version read out of the built
       JAR.
-- [x] Annotated tag `v1.1.2` created on verified commit `1447dc2` and pushed; the tag Actions run
+- [x] Annotated tag `v1.1.3` created on verified commit `767c8d2` and pushed; the tag Actions run
       completed with conclusion `success`.
-- [x] GitHub release published 2026-07-20 14:47:58 UTC with `draft=false`, `prerelease=false`, and
-      it is now the repository's Latest release.
+- [x] GitHub release `v1.1.3` published 2026-07-20 with `draft=false`, `prerelease=false`, and it
+      is now the repository's Latest release.
 - [x] Release contains exactly one updater-matching JAR plus `SHA256SUMS.txt` and no `original-*`
-      JAR. Verified by downloading the published release assets.
+      JAR. Verified by downloading the published release assets. From `1.1.3` this is guaranteed at
+      build time rather than by CI filter, since `maven-shade-plugin` — the only thing that ever
+      produced an `original-*` JAR — is removed.
 - [x] Downloaded release assets pass `sha256sum --check SHA256SUMS.txt`. Reported `OK` for the JAR.
+- [x] **The published artifact was confirmed to be Java 25 bytecode.** The JAR downloaded from the
+      `v1.1.3` release — built by CI, not locally — reads bytecode major **69**. This closes the
+      Java 21 drift that shipped silently in every release through `1.1.2`.
+
+      Prior release for history: `v1.1.2`, commit `1447dc2`, published 2026-07-20 14:47:58 UTC,
+      checksum `OK`. That release is functional but ships Java 21 bytecode; prefer `1.1.3`.
 
 ## 10. Updater
 
